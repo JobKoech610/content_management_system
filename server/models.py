@@ -1,53 +1,78 @@
 #!/usr/bin/env python3
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy_serializer import SerializerMixin
 
 db =SQLAlchemy()
 
-class Admin(db.Model):
-    id= db.Column(db.Integer, primary_key = True)
-    name = db.Column(db.String)
-    email = db.Column(db.String)
-    password =db.Column(db.String)
-
-class User(db.Model):
-    id= db.Column(db.Integer, primary_key = True)
+class Admin(db.Model, SerializerMixin):
+    __tablename__ = 'admins'
+    id = db.Column(db.Integer, primary_key = True)
     firstName = db.Column(db.String)
-    lastName= db.Column(db.String)
-    phoneNumber= db.Column(db.Interger)
+    lastName = db.Column(db.String)
     email = db.Column(db.String)
-    password =db.Column(db.String)
+    password = db.Column(db.String)
 
 
-class Platform(db.Model):
-    id= db.Column(db.Integer, primary_key = True)
-    publisher= db.Column(db.String)
-    description = db.Column(db.String)
-    image =db.Column(db.String)
-
-class Orders(db.Model):
-    id= db.Column(db.Integer, primary_key = True)
-    orderType = db.Column(db.String)
-    date= db.Column(db.String)
-    unitPrice =db.Column(db.String)
-    orderStatus= db.Column(db.String)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+class User(db.Model, SerializerMixin):
+    __tablename__ = 'users'
+    serialize_rules = ('-orders.user','-publications.user',)
+    id = db.Column(db.Integer, primary_key = True)
+    firstName = db.Column(db.String)
+    lastName = db.Column(db.String)
+    email = db.Column(db.String)
+    password = db.Column(db.String)
+    status = db.Column(db.String)
+    orders = db.relationship('Orders', backref="user")
+    publication = db.relationship('Publication', backref="publication")
 
 
-class Publication(db.Model):
-    id= db.Column(db.Integer, primary_key = True)
-    publicationType= db.Column(db.String)
-    publicationStatus = db.Column(db.String)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+class Platform(db.Model, SerializerMixin):
+    __tablename__ = 'platforms'
+    serialize_rules = ('-orders.platform',)
+    id = db.Column(db.Integer, primary_key = True)
+    Publisher = db.Column(db.String)
+    Description = db.Column(db.String)
+    Image = db.Column(db.String)
+    Amount = db.Column(db.String)
+    orders = db.relationship('Platforms', backref="user")
+    
 
-class Payment(db.Model):
-    id= db.Column(db.Integer, primary_key = True)
-    date = db.Column(db.String)
-    amount = db.Column(db.Integer)
-    refenceNo = db.Column(db.String)
-    paidVia = db.Column(db.String)
+class Publication(db.Model, SerializerMixin):
+    __tablename__ = 'publications'
+    serialize_rules = ('-orders.publication')
+    id = db.Column(db.Integer, primary_key = True)
+    typeOfPublication = db.Column(db.String)
+    status = db.Column(db.String)
+    orders = db.relationship('Orders', backref="publication")
+    userId = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-class Channel(db.Model):
-    id= db.Column(db.Integer, primary_key = True)
-    message = db.Column(db.String)
-    image = db.Column(db.String)
+
+class Communication_channel(db.Model, SerializerMixin):
+    __tablename__ = 'communication_channels'
+    id = db.Column(db.Integer, primary_key = True)
+    Message = db.Column(db.String)
+    userId = db.Column(db.Integer)
+    AdminId = db.Column(db.Integer)
+
+class Orders(db.Model, SerializerMixin):
+    __tablename__ = 'orders'
+    serialize_rules = ('-payments.order',)
+    id = db.Column(db.Integer, primary_key = True)
+    Type = db.Column(db.String)
+    UnitPrice = db.Column(db.String)
+    status = db.Column(db.String)
+    Date = db.Column(db.String)
+    userId = db.Column(db.Integer, db.ForeignKey('users.id'))
+    platformId = db.Column(db.Integer, db.ForeignKey('platforms.id'))
+    publicationId = db.Column(db.Integer, db.ForeignKey('publications.id'))
+    orders = db.relationship('Payment', backref="order")
+
+class Payment(db.Model, SerializerMixin):
+    __tablename__ = 'payments'
+    id = db.Column(db.Integer, primary_key = True) 
+    Amount = db.Column(db.Integer)
+    referenceNo = db.Column(db.Integer)
+    paidVia = db.Column(db.String)  
+    Date = db.Column(db.String)
+    OrderId = db.Column(db.Integer, db.ForeignKey('orders.id'))
