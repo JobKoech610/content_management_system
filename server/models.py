@@ -35,7 +35,7 @@ class Platform(db.Model, SerializerMixin):
     Description = db.Column(db.String)
     Image = db.Column(db.String)
     Amount = db.Column(db.String)
-    orders = db.relationship('Platforms', backref="user")
+    orders = db.relationship('Orders', backref="platform")
     
 
 class Publication(db.Model, SerializerMixin):
