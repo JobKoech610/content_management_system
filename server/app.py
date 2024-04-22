@@ -52,6 +52,55 @@ def admins():
             jsonify(admins_dict), 201
         )
         return response
+    
+
+@app.route('/admin/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
+def admin_by_id(id):
+    admin = Admin.query.filter_by(id=id).first()
+    if admin == None:
+        response_body ={
+            "message": "This admin doesn't exist"
+        }
+        response = make_response(jsonify(response_body), 404)
+        return response
+    else: 
+        if response.method == "GET":
+            admin_dict = admin.to_dict()
+            response = make_response(
+                jsonify(admin.to_dict()), 200
+            )
+            return response
+        elif request.method == 'PATCH':
+            admin = Admin.query.filter_by(id=id).first()
+            for attr in request.form:
+                setattr(admin, attr, request.form.get(attr))
+            
+            db.session.add(admin)
+            db.session.commit()
+
+            admin_dict = admin.to_dict()
+            response = make_response(
+                jsonify(admin_dict)
+            )
+            return response
+        elif request.method == 'DELETE':
+            db.session.delete(admin)
+            db.session.commit()
+            response_body ={
+                "delete_successful" :True,
+                "message" : "Admin Deleted"
+            }
+            response = make_response(
+                jsonify(response_body), 200
+            )
+            return response
+        else:
+            # Handle unsupported methods
+            response_body = {
+                "message": "Method not allowed for this endpoint."
+            }
+            response = make_response(jsonify(response_body), 405)
+            return response
 @app.route('/user', methods=['GET', 'POST'])
 def users():
     if request.method == 'GET':
@@ -87,6 +136,55 @@ def users():
         )
         return response
 
+
+@app.route('/user/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
+def users_by_id(id):
+    user = User.query.filter_by(id=id).first()
+    if user == None:
+        response_body ={
+            "message": "This user doesn't exist"
+        }
+        response = make_response(jsonify(response_body), 404)
+        return response
+    else: 
+        if response.method == "GET":
+            user_dict = user.to_dict()
+            response = make_response(
+                jsonify(user.to_dict()), 200
+            )
+            return response
+        elif request.method == 'PATCH':
+            user = User.query.filter_by(id=id).first()
+            for attr in request.form:
+                setattr(user, attr, request.form.get(attr))
+            
+            db.session.add(user)
+            db.session.commit()
+
+            user_dict = user.to_dict()
+            response = make_response(
+                jsonify(user_dict)
+            )
+            return response
+        elif request.method == 'DELETE':
+            db.session.delete(user)
+            db.session.commit()
+            response_body ={
+                "delete_successful" :True,
+                "message" : "User Deleted"
+            }
+            response = make_response(
+                jsonify(response_body), 200
+            )
+            return response
+        else:
+            # Handle unsupported methods
+            response_body = {
+                "message": "Method not allowed for this endpoint."
+            }
+            response = make_response(jsonify(response_body), 405)
+            return response
+
 @app.route('/platforms', methods=['GET', 'POST'])
 def platforms():
     if request.method == 'GET':
@@ -118,6 +216,53 @@ def platforms():
             jsonify(platforms_dict), 201
         )
         return response
+@app.route('/platforms/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
+def users_by_id(id):
+    platform = Platform.query.filter_by(id=id).first()
+    if platform == None:
+        response_body ={
+            "message": "This user doesn't exist"
+        }
+        response = make_response(jsonify(response_body), 404)
+        return response
+    else: 
+        if response.method == "GET":
+            platform_dict = platform.to_dict()
+            response = make_response(
+                jsonify(platform.to_dict()), 200
+            )
+            return response
+        elif request.method == 'PATCH':
+            platform = Platform.query.filter_by(id=id).first()
+            for attr in request.form:
+                setattr(platform, attr, request.form.get(attr))
+            
+            db.session.add(platform)
+            db.session.commit()
+
+            platform_dict = platform.to_dict()
+            response = make_response(
+                jsonify(platform_dict)
+            )
+            return response
+        elif request.method == 'DELETE':
+            db.session.delete(platform)
+            db.session.commit()
+            response_body ={
+                "delete_successful" :True,
+                "message" : "User Deleted"
+            }
+            response = make_response(
+                jsonify(response_body), 200
+            )
+            return response
+        else:
+            # Handle unsupported methods
+            response_body = {
+                "message": "Method not allowed for this endpoint."
+            }
+            response = make_response(jsonify(response_body), 405)
+            return response
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
