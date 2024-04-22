@@ -217,7 +217,7 @@ def platforms():
         )
         return response
 @app.route('/platforms/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
-def users_by_id(id):
+def platform_by_id(id):
     platform = Platform.query.filter_by(id=id).first()
     if platform == None:
         response_body ={
