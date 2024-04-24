@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+from . import db
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy.sql import func
 
 db =SQLAlchemy()
 
@@ -67,6 +69,7 @@ class Orders(db.Model, SerializerMixin):
     platformId = db.Column(db.Integer, db.ForeignKey('platforms.id'))
     publicationId = db.Column(db.Integer, db.ForeignKey('publications.id'))
     orders = db.relationship('Payment', backref="order")
+    created_at= db.Column(db.DateTime(timezone=True), server_default=func.now())
 
 class Payment(db.Model, SerializerMixin):
     __tablename__ = 'payments'
@@ -76,3 +79,4 @@ class Payment(db.Model, SerializerMixin):
     paidVia = db.Column(db.String)  
     Date = db.Column(db.String)
     OrderId = db.Column(db.Integer, db.ForeignKey('orders.id'))
+    created_at= db.Column(db.DateTime(timezone=True), server_default=func.now())
