@@ -20,7 +20,7 @@ def platforms():
                 "Description": platform.Description,
                 "Image": platform.Image,
                 "Amount": platform.Amount,
-                "orders": platform.orders,
+                # "orders": platform.orders,
                 "created_at":platform.created_at,
 
             }
@@ -110,8 +110,8 @@ def publications():
                 "id":publication.id,
                 "typeOfPublication": publication.typeOfPublication,
                 "status": publication.status,
-                "orders": publication.orders,
-                "userId": publication.userId,
+                
+                
                 "created_at":publication.created_at,
 
             }
@@ -282,7 +282,7 @@ def communications_by_id(id):
 @app.route('/orders', methods=['GET', 'POST'])
 def get_orders():
     if request.method == 'GET':
-        orders = Orders.query.all()
+        orders = Orders.query.order_by(Orders.Type).all()
         orders_list = []
         for order in orders:
             order_dict = {
@@ -290,21 +290,13 @@ def get_orders():
                 "Type": order.Type,
                 "UnitPrice": str(order.UnitPrice),
                 "status": order.status,
-                "userId": order.userId,
-                "platformId": order.platformId,
-                "publicationId": order.publicationId,
+                "publication_id": order.publication_id,
+                "user_id": order.user_id,
+                "platform_id": order.platform_id,
+                "platform": order.platform.to_dict() if order.platform else None, 
+                "publication": order.publication.to_dict() if order.publication else None,
                 "created_at": order.created_at,
-                "payment": []
             }
-            for payment in order.payment:
-                payment_dict = {
-                    "id": payment.id,
-                    "Amount": str(payment.Amount),
-                    "referenceNo": payment.referenceNo,
-                    "paidVia": payment.paidVia,
-                    "created_at": payment.created_at
-                }
-                order_dict["payment"].append(payment_dict)
             orders_list.append(order_dict)
 
         return jsonify(orders_list)
@@ -315,11 +307,9 @@ def get_orders():
             Type = request.form.get("Type"),
             UnitPrice = request.form.get("UnitPrice"),
             status = request.form.get("status"),
-            platformId = request.form.get("platformId"),
-            publicationId = request.form.get("publicationId"),
-            userId = request.form.get("userId"),
-
-            
+            publication_id = request.form.get("publication_id"),
+            platform_id = request.form.get("platform_id"),            
+            user_id = request.form.get("user_id"),          
             
 
         )    
@@ -394,7 +384,8 @@ def payments():
                 "Amount": str(payment.Amount),
                 "referenceNo": payment.referenceNo,
                 "paidVia": payment.paidVia,
-                "OrderId": payment.OrderId,
+                "order_id": payment.order_id,
+                "order": payment.order.to_dict() if payment.order else None,
                 "created_at": payment.created_at,
             }
             payments.append(payment_dict)
@@ -410,7 +401,7 @@ def payments():
             Amount = request.form.get("Amount"),
             referenceNo = request.form.get("referenceNo"),
             paidVia = request.form.get("paidVia"), 
-            OrderId = request.form.get("OrderId"),      
+            order_id = request.form.get("order_id"),      
             
 
         )    
@@ -480,4 +471,4 @@ def payments_by_id(id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)  
+    app.run(port=5000, debug=True)  
