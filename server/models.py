@@ -16,6 +16,9 @@ class Admin(db.Model, SerializerMixin):
     password = db.Column(db.String)
 
 
+    def __repr__(self):
+        return f'<Admin {self.firstName} {self.id}'
+
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
     serialize_rules = ('-orders.user','-publications.user',)
@@ -27,6 +30,9 @@ class User(db.Model, SerializerMixin):
     status = db.Column(db.String)
     orders = db.relationship('Orders', backref="user")
     publication = db.relationship('Publication', backref="publication")
+
+    def __repr__(self):
+        return f'<User {self.firstName} {self.id}'   
 
 
 class Platform(db.Model, SerializerMixin):
