@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-
+from . import app, db
 from flask import Flask, jsonify, request, make_response
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from models import db, Platform, Admin, User
+from .models import db, Platform, Admin, User
 
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -63,7 +63,7 @@ def admin_by_id(id):
         response = make_response(jsonify(response_body), 404)
         return response
     else: 
-        if response.method == "GET":
+        if request.method == "GET":
             admin_dict = admin.to_dict()
             response = make_response(
                 jsonify(admin.to_dict()), 200
@@ -146,7 +146,7 @@ def users_by_id(id):
         response = make_response(jsonify(response_body), 404)
         return response
     else: 
-        if response.method == "GET":
+        if request.method == "GET":
             user_dict = user.to_dict()
             response = make_response(
                 jsonify(user.to_dict()), 200
@@ -225,7 +225,7 @@ def platform_by_id(id):
         response = make_response(jsonify(response_body), 404)
         return response
     else: 
-        if response.method == "GET":
+        if request.method == "GET":
             platform_dict = platform.to_dict()
             response = make_response(
                 jsonify(platform.to_dict()), 200
