@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 from . import app, db
 from flask import Flask, jsonify, request, make_response
-from flask_migrate import Migrate
-from flask_restful import Api, Resource
-from .models import db, Platform, Admin, User
+from .models import db, Platform, Admin, User, Publication, Communication_channel, Orders, Payment
+from werkzeug.security import generate_password_hash,check_password_hash
 
-app = Flask(__name__)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://content_management:SHAR0007@localhost/content_management_db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app = Flask(__name__)
+# # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://content_management:SHAR0007@localhost/content_management_db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-migrate = Migrate(app, db)
+# migrate = Migrate(app, db)
 
-db.init_app(app)
+# db.init_app(app)
 
 # api = Api(app)
 
@@ -194,7 +193,8 @@ def platforms():
                 "Description": platform.Description,
                 "Image": platform.Image,
                 "Amount": platform.Amount,
-                "orders": platform.orders
+                "orders": platform.orders,
+                "created_at":platform.created_at
             }
             platforms.append(platform_dict)
         response = make_response(
@@ -262,6 +262,373 @@ def platform_by_id(id):
             }
             response = make_response(jsonify(response_body), 405)
             return response
-    
+
+
+
+@app.route('/publication', methods=['GET', 'POST', 'DELETE'])
+def publications():
+    if request.method == 'GET':
+        publications = []
+        for publication in Publication.query.all():
+            publication_dict = {
+                "id":publication.id,
+                "typeOfPublication": publication.typeOfPublication,
+                "status": publication.status,
+                
+                
+                "created_at":publication.created_at,
+
+            }
+            publications.append(publication_dict)
+        response = make_response(
+            jsonify(publications),
+            200
+        )    
+        return response
+
+    elif request.method == 'POST':
+        new_publication = Publication(
+            typeOfPublication = request.form.get("typeOfPublication"),
+            status = request.form.get("status"),
+            created_at = request.form.get("created_at"),
+            
+
+        )    
+        db.session.add(new_publication)
+        db.session.commit()
+        publication_dict = new_publication.to_dict()
+
+        response = make_response(
+            jsonify(publication_dict),
+            201
+        )
+        return response
+
+@app.route('/publication/<int:id>', methods=['GET','PATCH','DELETE'])
+def publications_by_id(id):
+    publication =  Publication.query.filter_by(id=id).first() 
+    if publication == None:
+        response_body = {
+            "message": "This record does not exist in our database. Please try again."
+        }
+        response = make_response(jsonify(response_body), 404)
+
+        return response
+    else:
+        if request.method == "DELETE":
+            db.session.delete(publication)
+            db.session.commit()
+            response_body = {
+                "delete_successful": True,
+                "message": " deleted."
+            }
+            response = make_response(
+                jsonify(response_body),
+                200
+            )
+            return response
+        elif request.method == 'GET':
+            publication_dict = publication.to_dict()
+
+            response = make_response(
+                jsonify(publication_dict),
+                200
+            )
+
+            return response
+
+        elif request.method == 'PATCH':
+            #publication = Publication.query.filter_by(id=id).first()
+            
+            for attr in request.form:
+                setattr(publication, attr, request.form.get(attr))
+
+            db.session.add(publication)
+            db.session.commit()
+
+            publication_dict = publication.to_dict()
+            
+            response = make_response(
+                jsonify(publication_dict),
+                200
+            )
+
+            return response
+
+@app.route('/communication', methods=['GET', 'POST', 'DELETE'])
+def communications():
+    if request.method == 'GET':
+        communications = []
+        for communication in Communication_channel.query.all():
+            communication_dict = {
+                "Message": communication.Message,
+                "userId": communication.status,
+                "AdminId": communication.orders,
+                "created_at":communication.created_at,
+
+            }
+            communications.append(communication_dict)
+        response = make_response(
+            jsonify(communications),
+            200
+        )    
+        return response
+
+    elif request.method == 'POST':
+        new_communications = Communication_channel(
+            Message = request.form.get("Message"),
+            userId = request.form.get("userId"),
+            AdminId = request.form.get("AdminId"),
+            
+
+        )    
+        db.session.add(new_communications)
+        db.session.commit()
+        communication_dict = new_communications.to_dict()
+
+        response = make_response(
+            jsonify(communication_dict),
+            201
+        )
+        return response
+
+@app.route('/communication/<int:id>', methods=['GET','PATCH','DELETE'])
+def communications_by_id(id):
+    communication =  Communication_channel.query.filter_by(id=id).first() 
+    if communication == None:
+        response_body = {
+            "message": "This record does not exist in our database. Please try again."
+        }
+        response = make_response(jsonify(response_body), 404)
+
+        return response
+    else:
+        if request.method == "DELETE":
+            db.session.delete(communication)
+            db.session.commit()
+            response_body = {
+                "delete_successful": True,
+                "message": " deleted."
+            }
+            response = make_response(
+                jsonify(response_body),
+                200
+            )
+            return response
+        elif request.method == 'GET':
+            communication_dict = communication.to_dict()
+
+            response = make_response(
+                jsonify(communication_dict),
+                200
+            )
+
+            return response
+
+        elif request.method == 'PATCH':
+            communication = Communication_channel.query.filter_by(id=id).first()
+
+            for attr in request.form:
+                setattr(communication, attr, request.form.get(attr))
+
+            db.session.add(communication)
+            db.session.commit()
+
+            communication_dict = communication.to_dict()
+
+            response = make_response(
+                jsonify(communication_dict),
+                200
+            )
+
+            return response 
+
+@app.route('/orders', methods=['GET', 'POST'])
+def get_orders():
+    if request.method == 'GET':
+        orders = Orders.query.order_by(Orders.Type).all()
+        orders_list = []
+        for order in orders:
+            order_dict = {
+                "id": order.id,
+                "Type": order.Type,
+                "UnitPrice": str(order.UnitPrice),
+                "status": order.status,
+                "publication_id": order.publication_id,
+                "user_id": order.user_id,
+                "platform_id": order.platform_id,
+                "platform": order.platform.to_dict() if order.platform else None, 
+                "publication": order.publication.to_dict() if order.publication else None,
+                "created_at": order.created_at,
+            }
+            orders_list.append(order_dict)
+
+        return jsonify(orders_list)
+
+
+    elif request.method == 'POST':
+        new_order = Orders(
+            Type = request.form.get("Type"),
+            UnitPrice = request.form.get("UnitPrice"),
+            status = request.form.get("status"),
+            publication_id = request.form.get("publication_id"),
+            platform_id = request.form.get("platform_id"),            
+            user_id = request.form.get("user_id"),          
+            
+
+        )    
+        db.session.add(new_order)
+        db.session.commit()
+        order_dict = new_order.to_dict()
+
+        response = make_response(
+            jsonify(order_dict),
+            201
+        )
+        return response
+
+@app.route('/orders/<int:id>', methods=['GET','PATCH','DELETE'])
+def orders_by_id(id):
+    order =  Orders.query.filter_by(id=id).first() 
+    if order == None:
+        response_body = {
+            "message": "This record does not exist in our database. Please try again."
+        }
+        response = make_response(jsonify(response_body), 404)
+
+        return response
+    else:
+        if request.method == "DELETE":
+            db.session.delete(order)
+            db.session.commit()
+            response_body = {
+                "delete_successful": True,
+                "message": " deleted."
+            }
+            response = make_response(
+                jsonify(response_body),
+                200
+            )
+            return response
+        elif request.method == 'GET':
+            order_dict = order.to_dict()
+
+            response = make_response(
+                jsonify(order_dict),
+                200
+            )
+
+            return response
+
+        elif request.method == 'PATCH':
+            order = Orders.query.filter_by(id=id).first()
+
+            for attr in request.form:
+                setattr(order, attr, request.form.get(attr))
+
+            db.session.add(order)
+            db.session.commit()
+
+            order_dict = order.to_dict()
+
+            response = make_response(
+                jsonify(order_dict),
+                200
+            )
+
+            return response
+
+@app.route('/payments', methods=['GET', 'POST', 'DELETE'])
+def payments():
+    if request.method == 'GET':
+        payments = []
+        for payment in Payment.query.all():
+            payment_dict = {
+                "id": payment.id,
+                "Amount": str(payment.Amount),
+                "referenceNo": payment.referenceNo,
+                "paidVia": payment.paidVia,
+                "order_id": payment.order_id,
+                "order": payment.order.to_dict() if payment.order else None,
+                "created_at": payment.created_at,
+            }
+            payments.append(payment_dict)
+        response = make_response(
+            jsonify(payments),
+            200
+        )
+        return response
+
+
+    elif request.method == 'POST':
+        new_payment = Payment(
+            Amount = request.form.get("Amount"),
+            referenceNo = request.form.get("referenceNo"),
+            paidVia = request.form.get("paidVia"), 
+            order_id = request.form.get("order_id"),      
+            
+
+        )    
+        db.session.add(new_payment)
+        db.session.commit()
+        payment_dict = new_payment.to_dict()
+
+        response = make_response(
+            jsonify(payment_dict),
+            201
+        )
+        return response
+
+@app.route('/payments/<int:id>', methods=['GET','PATCH','DELETE'])
+def payments_by_id(id):
+    payment =  Payment.query.filter_by(id=id).first() 
+    if payment == None:
+        response_body = {
+            "message": "This record does not exist in our database. Please try again."
+        }
+        response = make_response(jsonify(response_body), 404)
+
+        return response
+    else:
+        if request.method == "DELETE":
+            db.session.delete(payment)
+            db.session.commit()
+            response_body = {
+                "delete_successful": True,
+                "message": " deleted."
+            }
+            response = make_response(
+                jsonify(response_body),
+                200
+            )
+            return response
+        elif request.method == 'GET':
+            payment_dict = payment.to_dict()
+
+            response = make_response(
+                jsonify(payment_dict),
+                200
+            )
+
+            return response
+
+        elif request.method == 'PATCH':
+            payment = Payment.query.filter_by(id=id).first()
+
+            for attr in request.form:
+                setattr(payment, attr, request.form.get(attr))
+
+            db.session.add(payment)
+            db.session.commit()
+
+            payment_dict = payment.to_dict()
+
+            response = make_response(
+                jsonify(payment_dict),
+                200
+            )
+
+            return response                                   
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
