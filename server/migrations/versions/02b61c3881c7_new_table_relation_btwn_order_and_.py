@@ -50,7 +50,9 @@ def upgrade():
         batch_op.alter_column('UnitPrice',
                existing_type=sa.VARCHAR(),
                type_=sa.Numeric(precision=10, scale=2),
-               existing_nullable=True)
+               existing_nullable=True,
+               # Adding USING clause to cast existing data to Numeric
+               postgresql_using='("UnitPrice")::numeric')
         batch_op.alter_column('status',
                existing_type=sa.VARCHAR(),
                nullable=False)
@@ -94,9 +96,11 @@ def upgrade():
                existing_type=sa.VARCHAR(),
                nullable=False)
         batch_op.alter_column('Amount',
-               existing_type=sa.VARCHAR(),
+               existing_type=sa.INTEGER(),
                type_=sa.Numeric(precision=10, scale=2),
-               existing_nullable=True)
+               existing_nullable=True,
+               # Adding USING clause to cast existing data to Numeric
+               postgresql_using='("Amount")::numeric')
 
     with op.batch_alter_table('publications', schema=None) as batch_op:
         batch_op.add_column(sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True))
@@ -165,9 +169,11 @@ def downgrade():
 
     with op.batch_alter_table('platforms', schema=None) as batch_op:
         batch_op.alter_column('Amount',
-               existing_type=sa.Numeric(precision=10, scale=2),
-               type_=sa.VARCHAR(),
-               existing_nullable=True)
+               existing_type=sa.INTEGER(),
+               type_=sa.Numeric(precision=10, scale=2),
+               existing_nullable=True,
+               # Adding USING clause to cast existing data to Numeric
+               postgresql_using='("Amount")::numeric')
         batch_op.alter_column('Image',
                existing_type=sa.VARCHAR(),
                nullable=True)
@@ -191,9 +197,11 @@ def downgrade():
                existing_type=sa.INTEGER(),
                nullable=True)
         batch_op.alter_column('Amount',
-               existing_type=sa.Numeric(precision=10, scale=2),
-               type_=sa.INTEGER(),
-               existing_nullable=True)
+               existing_type=sa.INTEGER(),
+               type_=sa.Numeric(precision=10, scale=2),
+               existing_nullable=True,
+               # Adding USING clause to cast existing data to Numeric
+               postgresql_using='("Amount")::numeric')
         batch_op.drop_column('order_id')
 
     with op.batch_alter_table('orders', schema=None) as batch_op:

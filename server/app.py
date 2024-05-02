@@ -29,7 +29,7 @@ def admins():
                 "lastName": admin.lastName,
                 "email": admin.email,
                 "password": admin.password,
-                "orders": admin.orders
+                "created_at": admin.created_at
             }
             admins.append(admin_dict)
         response = make_response(
@@ -110,8 +110,7 @@ def users():
                 "email": user.email,
                 "password": user.password,
                 "status": user.status,
-                "orders": user.orders,
-                "publication":user.publication
+                "created_at": user.created_at
             }
             users.append(user_dict)
         response = make_response(

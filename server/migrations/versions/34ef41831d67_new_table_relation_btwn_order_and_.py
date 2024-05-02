@@ -50,19 +50,21 @@ def upgrade():
         batch_op.alter_column('UnitPrice',
                existing_type=sa.VARCHAR(),
                type_=sa.Numeric(precision=10, scale=2),
-               existing_nullable=True)
+               existing_nullable=True,
+               # Adding USING clause to cast existing data to Numeric
+               postgresql_using='("UnitPrice")::numeric')
         batch_op.alter_column('status',
                existing_type=sa.VARCHAR(),
                nullable=False)
         batch_op.drop_constraint('orders_userId_fkey', type_='foreignkey')
-        batch_op.drop_constraint('orders_platformId_fkey', type_='foreignkey')
         batch_op.drop_constraint('orders_publicationId_fkey', type_='foreignkey')
+        batch_op.drop_constraint('orders_platformId_fkey', type_='foreignkey')
         batch_op.create_foreign_key(None, 'users', ['user_id'], ['id'])
-        batch_op.create_foreign_key(None, 'publications', ['publication_id'], ['id'])
         batch_op.create_foreign_key(None, 'platforms', ['platform_id'], ['id'])
+        batch_op.create_foreign_key(None, 'publications', ['publication_id'], ['id'])
         batch_op.drop_column('userId')
-        batch_op.drop_column('platformId')
         batch_op.drop_column('Date')
+        batch_op.drop_column('platformId')
         batch_op.drop_column('publicationId')
 
     with op.batch_alter_table('payments', schema=None) as batch_op:
@@ -70,7 +72,9 @@ def upgrade():
         batch_op.alter_column('Amount',
                existing_type=sa.INTEGER(),
                type_=sa.Numeric(precision=10, scale=2),
-               existing_nullable=True)
+               existing_nullable=True,
+               # Adding USING clause to cast existing data to Numeric
+               postgresql_using='("Amount")::numeric')
         batch_op.alter_column('referenceNo',
                existing_type=sa.INTEGER(),
                nullable=False)
@@ -94,9 +98,11 @@ def upgrade():
                existing_type=sa.VARCHAR(),
                nullable=False)
         batch_op.alter_column('Amount',
-               existing_type=sa.VARCHAR(),
+               existing_type=sa.INTEGER(),
                type_=sa.Numeric(precision=10, scale=2),
-               existing_nullable=True)
+               existing_nullable=True,
+               # Adding USING clause to cast existing data to Numeric
+               postgresql_using='("Amount")::numeric')
 
     with op.batch_alter_table('publications', schema=None) as batch_op:
         batch_op.add_column(sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True))
