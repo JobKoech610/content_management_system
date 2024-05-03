@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from . import app, db
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request, make_response, current_app
 from .models import db, Platform, Admin, User, Publication, Communication_channel, Orders, Payment
 from werkzeug.security import generate_password_hash,check_password_hash
-
+import jwt
+from datetime import datetime, timedelta
+#from flask_jwt_extended import jwt_required, get_jwt_identity, JWTManager
 # app = Flask(__name__)
 # # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://content_management:SHAR0007@localhost/content_management_db'
@@ -627,7 +629,73 @@ def payments_by_id(id):
                 200
             )
 
-            return response                                   
+            return response       
+@app.route('/login', methods=['POST'])
+def login():
+    auth= request.json
+    if not auth or not auth.get("email") or not auth.get("password"):
+        return make_response({
+            "message" : "Please ensure you have the right details"
+        }), 401
+    user=User.query.filter_by(email=auth.get("email")).first()
+    if not user:
+        return make_response({
+            "message":"Create Account"
+        }), 401
+    if user and check_password_hash(user.password, auth.get("password")):
+        token= jwt.decode({
+            'id': user.id,
+            'exp': datetime.utcnow() + timedelta(day=1)
+        },
+        "secret",
+        "hS256")
+        return make_response({
+            'token':token
+        }), 201
+    return make_response({
+        "message":" Error in logging in User"
+    }), 500
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.json
+
+    firstName=data['firstName']
+    lastName=data['lastName']
+    password=data['password']
+    email=data['email']                    
+    status='Active'
+    password_harsh= generate_password_hash(password)
+    if User.query.filter_by(email=email).first():
+        return jsonify({'error': 'Email already registered'}), 409
+    user= User(firstName=firstName,lastName=lastName, email=email, password=password_harsh, 
+               status=status)
+
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({'message': 'User created successfully'}), 201
+
+
+
+# def generate_token(user):
+#     secret_key=current_app.config['JWT_SECRET_KEY']
+#     expiration= datetime.utcnow()+timedelta(days=1)
+#     load={
+#         "sub":user.id,
+#         "user_id":user.id, 
+#         "exp":expiration,
+#         "firstName":user.firstName,
+#         "lastName":user.lastName,
+#         "email":user.email,
+#         "status":user.status
+#     }
+#     token=jwt.encode(load, secret_key, algorithm= 'HS256')
+#     return token
+    
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
+
+
+
