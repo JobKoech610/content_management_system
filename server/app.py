@@ -3,19 +3,11 @@ from . import app, db
 from flask import Flask, jsonify, request, make_response, current_app
 from .models import db, Platform, Admin, User, Publication, Communication_channel, Orders, Payment
 from werkzeug.security import generate_password_hash,check_password_hash
-import jwt
+#import jwt
 from datetime import datetime, timedelta
-#from flask_jwt_extended import jwt_required, get_jwt_identity, JWTManager
-# app = Flask(__name__)
-# # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://content_management:SHAR0007@localhost/content_management_db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 
-# migrate = Migrate(app, db)
-
-# db.init_app(app)
-
-# api = Api(app)
+jwt= JWTManager(app)
 
 @app.route('/')
 def index():
@@ -633,7 +625,7 @@ def payments_by_id(id):
 
 @app.route('/login', methods=['POST'])
 def login():
-    auth = request.json
+    auth = request.get_json()
     if not auth or not auth.get("email") or not auth.get("password"):
         return make_response({
             "message": "Please ensure you have the right details"
@@ -646,11 +638,18 @@ def login():
         }), 401
     
     if user and check_password_hash(user.password, auth.get("password")):
-        expiration = datetime.utcnow() + timedelta(days=1)
-        token = generate_token(user, expiration)
-        return make_response({
-            'token': token
-        }), 201
+        expiration = timedelta(minutes=30)
+        metadata= {
+            "firstName":user.firstName,
+            "lastName":user.lastName,
+            "email":user.email,
+            "status":user.status
+        }
+        token = create_access_token(identity = user.id, additional_claims=metadata, expires_delta=expiration)
+       #token = generate_token(user, expiration)
+        return make_response(jsonify({
+            "token": token, "user_id":user.id
+        })), 201
     
     return make_response({
         "message": "Invalid email or password"
@@ -658,7 +657,7 @@ def login():
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    data = request.json
+    data = request.get_json()
 
     # Extract data from request
     firstName = data.get('firstName')
@@ -685,30 +684,34 @@ def signup():
         password=hashed_password,
         status='Active'
     )
+    try:
+        # Add the user to the database
+        db.session.add(new_user)
+        db.session.commit()
 
-    # Add the user to the database
-    db.session.add(new_user)
-    db.session.commit()
+        # Return a success response
+        return make_response({'message': 'User created successfully'}, 201)
+    except IntegrityError:
+        return {
+            "error":"422"
+        }
 
-    # Return a success response
-    return make_response({'message': 'User created successfully'}, 201)
 
 
+# def generate_token(user, expiration):
+#     secret_key=current_app.config['JWT_SECRET_KEY']
+#     load={
+#         "sub":user.id,
+#         "user_id":user.id, 
+#         "exp": expiration,
+#         "firstName":user.firstName,
+#         "lastName":user.lastName,
+#         "email":user.email,
+#         "status":user.status
+#     }
+#     token=jwt.encode(load, secret_key, algorithm= 'HS256')
+#     return token
 
-def generate_token(user, expiration):
-    secret_key=current_app.config['JWT_SECRET_KEY']
-    load={
-        "sub":user.id,
-        "user_id":user.id, 
-        "exp": expiration,
-        "firstName":user.firstName,
-        "lastName":user.lastName,
-        "email":user.email,
-        "status":user.status
-    }
-    token=jwt.encode(load, secret_key, algorithm= 'HS256')
-    return token
-    
 
 
 if __name__ == "__main__":
