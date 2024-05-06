@@ -628,69 +628,86 @@ def payments_by_id(id):
                 jsonify(payment_dict),
                 200
             )
+            return response      
 
-            return response       
+
 @app.route('/login', methods=['POST'])
 def login():
-    auth= request.json
+    auth = request.json
     if not auth or not auth.get("email") or not auth.get("password"):
         return make_response({
-            "message" : "Please ensure you have the right details"
+            "message": "Please ensure you have the right details"
         }), 401
-    user=User.query.filter_by(email=auth.get("email")).first()
+    
+    user = User.query.filter_by(email=auth.get("email")).first()
     if not user:
         return make_response({
-            "message":"Create Account"
+            "message": "User not found"
         }), 401
+    
     if user and check_password_hash(user.password, auth.get("password")):
-        token= jwt.decode({
-            'id': user.id,
-            'exp': datetime.utcnow() + timedelta(day=1)
-        },
-        "secret",
-        "hS256")
+        expiration = datetime.utcnow() + timedelta(days=1)
+        token = generate_token(user, expiration)
         return make_response({
-            'token':token
+            'token': token
         }), 201
+    
     return make_response({
-        "message":" Error in logging in User"
-    }), 500
+        "message": "Invalid email or password"
+    }), 401
 
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.json
 
-    firstName=data['firstName']
-    lastName=data['lastName']
-    password=data['password']
-    email=data['email']                    
-    status='Active'
-    password_harsh= generate_password_hash(password)
+    # Extract data from request
+    firstName = data.get('firstName')
+    lastName = data.get('lastName')
+    email = data.get('email')
+    password = data.get('password')
+
+    # Check if all required fields are present
+    if not (firstName and lastName and email and password):
+        return make_response({'error': 'Missing required fields'}, 400)
+
+    # Hash the password
+    hashed_password = generate_password_hash(password)
+
+    # Check if the email is already registered
     if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already registered'}), 409
-    user= User(firstName=firstName,lastName=lastName, email=email, password=password_harsh, 
-               status=status)
+        return make_response({'error': 'Email already registered'}, 409)
 
-    db.session.add(user)
+    # Create a new user
+    new_user = User(
+        firstName=firstName,
+        lastName=lastName,
+        email=email,
+        password=hashed_password,
+        status='Active'
+    )
+
+    # Add the user to the database
+    db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'User created successfully'}), 201
+
+    # Return a success response
+    return make_response({'message': 'User created successfully'}, 201)
 
 
 
-# def generate_token(user):
-#     secret_key=current_app.config['JWT_SECRET_KEY']
-#     expiration= datetime.utcnow()+timedelta(days=1)
-#     load={
-#         "sub":user.id,
-#         "user_id":user.id, 
-#         "exp":expiration,
-#         "firstName":user.firstName,
-#         "lastName":user.lastName,
-#         "email":user.email,
-#         "status":user.status
-#     }
-#     token=jwt.encode(load, secret_key, algorithm= 'HS256')
-#     return token
+def generate_token(user, expiration):
+    secret_key=current_app.config['JWT_SECRET_KEY']
+    load={
+        "sub":user.id,
+        "user_id":user.id, 
+        "exp": expiration,
+        "firstName":user.firstName,
+        "lastName":user.lastName,
+        "email":user.email,
+        "status":user.status
+    }
+    token=jwt.encode(load, secret_key, algorithm= 'HS256')
+    return token
     
 
 
