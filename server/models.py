@@ -24,7 +24,7 @@ class Platform(db.Model, SerializerMixin):
     Publisher = db.Column(db.String(100), nullable=False)
     Description = db.Column(db.String(1000), nullable=False)
     Image = db.Column(db.String(500), nullable=False)
-    Amount = db.Column(db.Numeric(10,2))
+    Amount = db.Column(db.Numeric(10, 2))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     
     orders = db.relationship('Orders', backref='platform')
@@ -54,7 +54,6 @@ class Orders(db.Model, SerializerMixin):
     UnitPrice = db.Column(db.Numeric(10, 2))
     status = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-
     publication_id = db.Column(db.Integer, db.ForeignKey('publications.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     platform_id = db.Column(db.Integer, db.ForeignKey('platforms.id'))
