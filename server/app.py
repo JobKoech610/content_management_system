@@ -3,19 +3,8 @@ from . import app, db
 from flask import Flask, jsonify, request, make_response, current_app
 from .models import db, Platform, Admin, User, Publication, Communication_channel, Orders, Payment
 from werkzeug.security import generate_password_hash,check_password_hash
-import jwt
 from datetime import datetime, timedelta
-#from flask_jwt_extended import jwt_required, get_jwt_identity, JWTManager
-# app = Flask(__name__)
-# # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://content_management:SHAR0007@localhost/content_management_db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# migrate = Migrate(app, db)
-
-# db.init_app(app)
-
-# api = Api(app)
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 
 @app.route('/')
 def index():
@@ -630,68 +619,77 @@ def payments_by_id(id):
             )
 
             return response       
-@app.route('/login', methods=['POST'])
+
+@app.route('/login', methods = ['POST'])
 def login():
-    auth= request.json
+    auth = request.get_json()
     if not auth or not auth.get("email") or not auth.get("password"):
         return make_response({
-            "message" : "Please ensure you have the right details"
+            "message":"please ensure you have entered the correct details"
         }), 401
-    user=User.query.filter_by(email=auth.get("email")).first()
+
+    user = User.query.filter_by(email=auth.get("email")).first()
     if not user:
         return make_response({
-            "message":"Create Account"
+            "message":"User not found"
         }), 401
+
     if user and check_password_hash(user.password, auth.get("password")):
-        token= jwt.decode({
-            'id': user.id,
-            'exp': datetime.utcnow() + timedelta(day=1)
-        },
-        "secret",
-        "hS256")
-        return make_response({
-            'token':token
-        }), 201
+        expiration = timedelta(minutes = 30)
+        metadata = {
+            "firstName":user.firstName,
+            "lastName":user.lastName,
+            "email":user.email,
+            "status":user.status
+        }
+        token = create_access_token(identity = user.id, additional_claims=metadata, expires_delta=expiration)
+        return make_response(jsonify({
+            "token": token, "user_id":user.id, "metadata": metadata
+        })), 201
     return make_response({
-        "message":" Error in logging in User"
-    }), 500
+        "message": "Invalid email or password"
+    }), 401
 
-@app.route('/signup', methods=['POST'])
+@app.route('/signup', methods = ['POST'])
 def signup():
-    data = request.json
+    data = request.get_json()
 
-    firstName=data['firstName']
-    lastName=data['lastName']
-    password=data['password']
-    email=data['email']                    
-    status='Active'
-    password_harsh= generate_password_hash(password)
+    firstName = data.get('firstName')
+    lastName = data.get('lastName')
+    email = data.get('email')
+    password = data.get('password')
+
+    # Check if all required fields are present
+    if not (firstName and lastName and email and password):
+        return make_response({'error': 'Missing required fields'}, 400)
+
+    # Hash the password
+    hashed_password = generate_password_hash(password)
+
+    # Check if the email is already registered
     if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already registered'}), 409
-    user= User(firstName=firstName,lastName=lastName, email=email, password=password_harsh, 
-               status=status)
+        return make_response({'error': 'Email already registered'}, 409)
 
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({'message': 'User created successfully'}), 201
+    # Create a new user
+    new_user = User(
+        firstName=firstName,
+        lastName=lastName,
+        email=email,
+        password=hashed_password,
+        status='Active'
+    )
+    try:
+        # Add the user to the database
+        db.session.add(new_user)
+        db.session.commit()
 
+        # Return a success response
+        return make_response({'message': 'User created successfully'}, 201)
+    except IntegrityError:
+        return {
+            "error":"422"
+        }
 
-
-# def generate_token(user):
-#     secret_key=current_app.config['JWT_SECRET_KEY']
-#     expiration= datetime.utcnow()+timedelta(days=1)
-#     load={
-#         "sub":user.id,
-#         "user_id":user.id, 
-#         "exp":expiration,
-#         "firstName":user.firstName,
-#         "lastName":user.lastName,
-#         "email":user.email,
-#         "status":user.status
-#     }
-#     token=jwt.encode(load, secret_key, algorithm= 'HS256')
-#     return token
-    
 
 
 if __name__ == "__main__":
