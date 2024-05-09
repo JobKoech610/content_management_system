@@ -695,13 +695,38 @@ def signup():
         return {
             "error":"422"
         }
+@app.route('/charges/<int:id>', method=['POST'])
+def charges():
+    if not session['user_id']:
+        return make_response({"message":"User must be logged in"}, 401)
+    
+    order_purchased= Payment.query.get(id)
+    user_transaction=session.get("user_id")
+    try:
+        checkout_session= stripe.checkout.Session.create(
+            stripe_payment=[
+                {
+                    'amount':order_purchased.Amount
+                }
+            ],
+            mode='payment',
+            client_reference_id=user_transaction,
+        )
+    except Exception as e:
+        return make_response(str(e))
+    return make_response({"message":" Payment Successful"}, 201) 
 
-@app.route('/charge', method=['POST'])
-def charge():
-    amount=100
+
+@app.route('/charges', method=['POST'])
+def charges():
+
+    data= request.get_json()
+
+    amount = data.get("Amount")
+    email= data.get("email")      
 
     customer= stripe.Customer.create(
-        email="",
+        email= email,
         source=request.form['stripeToken']
     )
 
@@ -712,7 +737,7 @@ def charge():
         description='Flask Charge'
     )
 
-    return 
+    return make_response({"message":" Payment Successful"}, 201) 
 
 
 if __name__ == "__main__":
