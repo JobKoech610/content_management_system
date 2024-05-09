@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 from . import app, db
-from flask import Flask, jsonify, request, make_response, current_app
+from flask import Flask, jsonify, request, make_response
 from .models import db, Platform, Admin, User, Publication, Communication_channel, Orders, Payment
 from werkzeug.security import generate_password_hash,check_password_hash
-#import jwt
+import stripe
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 
@@ -696,22 +696,23 @@ def signup():
             "error":"422"
         }
 
+@app.route('/charge', method=['POST'])
+def charge():
+    amount=100
 
+    customer= stripe.Customer.create(
+        email="",
+        source=request.form['stripeToken']
+    )
 
-# def generate_token(user, expiration):
-#     secret_key=current_app.config['JWT_SECRET_KEY']
-#     load={
-#         "sub":user.id,
-#         "user_id":user.id, 
-#         "exp": expiration,
-#         "firstName":user.firstName,
-#         "lastName":user.lastName,
-#         "email":user.email,
-#         "status":user.status
-#     }
-#     token=jwt.encode(load, secret_key, algorithm= 'HS256')
-#     return token
+    charge= stripe.Charge.create(
+        customer= customer.id,
+        amount=amount,
+        currency='ksh',
+        description='Flask Charge'
+    )
 
+    return 
 
 
 if __name__ == "__main__":
