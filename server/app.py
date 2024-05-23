@@ -3,7 +3,7 @@ from . import app, db
 from flask import Flask, jsonify, request, make_response
 from .models import db, Platform, Admin, User, Publication, Communication_channel, Orders, Payment
 from werkzeug.security import generate_password_hash,check_password_hash
-import stripe
+#import stripe
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 
@@ -695,49 +695,49 @@ def signup():
         return {
             "error":"422"
         }
-@app.route('/charges/<int:id>', method=['POST'])
-def charges():
-    if not session['user_id']:
-        return make_response({"message":"User must be logged in"}, 401)
+# @app.route('/charges/<int:id>', method=['POST'])
+# def charges():
+#     if not session['user_id']:
+#         return make_response({"message":"User must be logged in"}, 401)
     
-    order_purchased= Payment.query.get(id)
-    user_transaction=session.get("user_id")
-    try:
-        checkout_session= stripe.checkout.Session.create(
-            stripe_payment=[
-                {
-                    'amount':order_purchased.Amount
-                }
-            ],
-            mode='payment',
-            client_reference_id=user_transaction,
-        )
-    except Exception as e:
-        return make_response(str(e))
-    return make_response({"message":" Payment Successful"}, 201) 
+#     order_purchased= Payment.query.get(id)
+#     user_transaction=session.get("user_id")
+#     try:
+#         checkout_session= stripe.checkout.Session.create(
+#             stripe_payment=[
+#                 {
+#                     'amount':order_purchased.Amount
+#                 }
+#             ],
+#             mode='payment',
+#             client_reference_id=user_transaction,
+#         )
+#     except Exception as e:
+#         return make_response(str(e))
+#     return make_response({"message":" Payment Successful"}, 201) 
 
 
-@app.route('/charges', method=['POST'])
-def charges():
+# @app.route('/charges', method=['POST'])
+# def charges():
 
-    data= request.get_json()
+#     data= request.get_json()
 
-    amount = data.get("Amount")
-    email= data.get("email")      
+#     amount = data.get("Amount")
+#     email= data.get("email")      
 
-    customer= stripe.Customer.create(
-        email= email,
-        source=request.form['stripeToken']
-    )
+#     customer= stripe.Customer.create(
+#         email= email,
+#         source=request.form['stripeToken']
+#     )
 
-    charge= stripe.Charge.create(
-        customer= customer.id,
-        amount=amount,
-        currency='ksh',
-        description='Flask Charge'
-    )
+#     charge= stripe.Charge.create(
+#         customer= customer.id,
+#         amount=amount,
+#         currency='ksh',
+#         description='Flask Charge'
+#     )
 
-    return make_response({"message":" Payment Successful"}, 201) 
+#     return make_response({"message":" Payment Successful"}, 201) 
 
 
 if __name__ == "__main__":
