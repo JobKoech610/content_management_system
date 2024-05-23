@@ -3,11 +3,21 @@ from . import app, db
 from flask import Flask, jsonify, request, make_response
 from .models import db, Platform, Admin, User, Publication, Communication_channel, Orders, Payment
 from werkzeug.security import generate_password_hash,check_password_hash
-#import stripe
+import cloudinary
+import cloudinary.uploader 
+import cloudinary.api
+import cloudinary.utils 
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 
 jwt= JWTManager(app)
+
+cloudinary.config(
+    cloud_name = "dpmqjzqjg",
+    api_key = "964744444444444",
+    api_secret = "XxXxXxXxXxXxXxXxXxXxXxXxX"
+    )
+    
 
 @app.route('/')
 def index():

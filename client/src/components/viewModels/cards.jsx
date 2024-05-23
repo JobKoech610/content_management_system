@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import "../styles/cards.css"
 
 
 function Cards(){
@@ -23,14 +24,14 @@ function Cards(){
 
 
     return(
-        <>
+        <div className="cardHolder">
         {data.map((item, index) => (
             <div key={index} className="card">
                 <img src={item.Image}/>
                 <p>{item.Description}</p>
                 <p>Price: {item.Amount}</p>
             </div>))}
-        </>
+        </div>
     )
  }
 
