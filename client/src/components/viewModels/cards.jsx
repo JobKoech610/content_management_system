@@ -13,7 +13,7 @@ function Cards(){
     const url = 'http://127.0.0.1:5000/platforms'
     try {
       const response = await fetch(url)
-      //const data = await response.json()
+      const data = await response.json()
       console.log(data)
       setData(data)
     } catch (error) {
@@ -26,7 +26,7 @@ function Cards(){
         <>
         {data.map((item, index) => (
             <div key={index} className="card">
-                <h2>{item.Image}</h2>
+                <img src={item.Image}/>
                 <p>{item.Description}</p>
                 <p>Price: {item.Amount}</p>
             </div>))}
