@@ -5,6 +5,7 @@ from .models import db, Platform, Admin, User, Publication, Communication_channe
 from werkzeug.security import generate_password_hash,check_password_hash
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
+from sqlalchemy.exc import IntegrityError
 
 @app.route('/')
 def index():
@@ -108,21 +109,45 @@ def users():
             jsonify(users), 200
         )
         return response
-    elif request.method =='POST':
-        new_user= User(
-            firstName = request.form.get('firstName'),
-            lastName= request.form.get('lastName'),
-            email= request.form.get('email'),
-            password=request.form.get('password'),
-            status=request.form.get('status')
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        users_dict=new_user.to_dict()
-        response= make_response(
-            jsonify(users_dict), 201
-        )
-        return response
+    # elif request.method =='POST':
+    #     new_user= User(
+    #         firstName = request.form.get('firstName'),
+    #         lastName= request.form.get('lastName'),
+    #         email= request.form.get('email'),
+    #         password=request.form.get('password'),
+    #         status=request.form.get('status')
+    #     )
+    #     db.session.add(new_user)
+    #     db.session.commit()
+    #     users_dict=new_user.to_dict()
+    #     response= make_response(
+    #         jsonify(users_dict), 201
+    #     )
+    #     return response
+    elif request.method == 'POST':
+        data = request.get_json()
+        try:
+            new_user = User(
+                firstName=data.get('firstName'),
+                lastName=data.get('lastName'),
+                email=data.get('email'),
+                password=data.get('password'),
+                status=data.get('status', 'active')  # default status to active if not provided
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            user_dict = new_user.to_dict()
+            response = make_response(
+                jsonify(user_dict), 201
+            )
+            return response
+        except IntegrityError as e:
+            db.session.rollback()
+            if "duplicate key value violates unique constraint" in str(e.orig):
+                return jsonify({"error": "Email already exists"}), 400
+            return jsonify({"error": str(e.orig)}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 
 @app.route('/user/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
