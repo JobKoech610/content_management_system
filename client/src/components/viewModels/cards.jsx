@@ -21,7 +21,10 @@ function Cards(){
       console.log(error)
     }
   }
-
+  const handleSubmit =(e) => {
+    e.preventDefault();
+    console.log("submit");
+  }
 
     return(
         <div className="cardHolder">
@@ -31,6 +34,9 @@ function Cards(){
                 <p>{item.Description}</p>
                 <p>Price: {item.Amount}</p>
             </div>))}
+        <foam onSubmit={handleSubmit}> 
+          <button type="submit">Purchase</button>
+        </foam>
         </div>
     )
  }

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import NavBar from './components/views/NavBar'
 import Cards from './components/viewModels/cards'
+import LogIn from './components/views/logIn'
+import SignUp from './components/views/signUp'
 //import './App.css'
 
 function App() {
@@ -9,7 +11,9 @@ function App() {
   return (
     <>
     <NavBar/>
-    <Cards/>
+    <SignUp/>
+    {/* <LogIn/> */}
+    {/* <Cards/> */}
     </>
   )
 }
