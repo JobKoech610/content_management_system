@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 function SignUp() {
     const [formData, setFormData] = useState({
@@ -14,10 +14,30 @@ function SignUp() {
             [e.target.name]: e.target.value,
         })
     }
+
+    const validateForm=() =>{
+        if (!formData.firstName || !formData.lastName) {
+            alert("Please enter your full names")
+            return false
+            }
+        else if (!formData.email) {
+                alert("Please enter your last name")
+                return false   
+        }
+        else if (!formData.password) {
+            alert("Please enter your password")
+            return false
+            }
+        else {
+            return true;
+            }
+    }
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(formData);
-    }
+        if(validateForm()){
+            console.log(formData)
+            // send data to backend
+    }}
 
     const post = {
         method: 'POST',
