@@ -82,7 +82,7 @@ return (
             <label>Password</label>
             <input type="text" placeholder="Password"  onChange={handleOnChange} name="password" value={formData.password}/>
             <label>Confirm Password</label>
-            <input type="text" placeholder="Confirm Password"  onChange={handleOnChange} name="Password" value={formData.confirmPassword}/>
+            <input type="text" placeholder="Confirm Password"  onChange={handleOnChange} name="confirmPassword" value={formData.confirmPassword}/>
             <button type="submit" onClick={(e)=>alert(e.target.value)}>SignUp</button>
         </form>
     </div>
