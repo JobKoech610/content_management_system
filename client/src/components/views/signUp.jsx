@@ -5,54 +5,70 @@ function SignUp() {
         firstName: "",
         lastName: "",
         email: "",
-        password: ""
+        password: "",
+        confirmPassword: ""
     })
+
+    const [error, setError] = useState("")
 
     const handleOnChange = (e) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value,
-        })
+        });
+        setError("");
     }
 
     const validateForm=() =>{
         if (!formData.firstName || !formData.lastName) {
-            alert("Please enter your full names")
-            return false
-            }
-        else if (!formData.email) {
-                alert("Please enter your last name")
-                return false   
-        }
-        else if (!formData.password) {
-            alert("Please enter your password")
-            return false
+            alert("Please enter your full names");
+            return false;
+            } else if (!formData.email) {
+                alert("Please enter your email");
+                return false;   
+        } else if (formData.password !== formData.confirmPassword) {
+            alert("Passwords do not match")
+            return false;
             }
         else {
             return true;
             }
-    }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        if(validateForm()){
-            console.log(formData)
-            // send data to backend
-    }}
-
-    const post = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-    }
-    fetch('http://127.0.0.1:5000/user', post)
-        .then(response => response.json())
-        .then(data => setFormData(data))
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-
+        if (validateForm()) {
+            const post = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    password: formData.password,
+                    status: "active"
+                })
+            };
+            fetch('http://127.0.0.1:5000/user', post)
+                .then(response => {
+                    if (!response.ok) {
+                        alert("Email already exists");
+                        return response.json().then(err => { throw new Error(err.error) });
+                        
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    setError(error.message); // Set the error message to state
+                });
+        }
+    };
 return (
     <div>
 
@@ -66,7 +82,7 @@ return (
             <label>Password</label>
             <input type="text" placeholder="Password"  onChange={handleOnChange} name="password" value={formData.password}/>
             <label>Confirm Password</label>
-            <input type="text" placeholder="Confirm Password"  onChange={handleOnChange} name="Password" value={formData.password}/>
+            <input type="text" placeholder="Confirm Password"  onChange={handleOnChange} name="Password" value={formData.confirmPassword}/>
             <button type="submit" onClick={(e)=>alert(e.target.value)}>SignUp</button>
         </form>
     </div>

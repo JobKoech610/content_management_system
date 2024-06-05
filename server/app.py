@@ -122,20 +122,30 @@ def users():
         )
         return response
     elif request.method =='POST':
-        new_user= User(
-            firstName = request.form.get('firstName'),
-            lastName= request.form.get('lastName'),
-            email= request.form.get('email'),
-            password=request.form.get('password'),
-            status=request.form.get('status')
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        users_dict=new_user.to_dict()
-        response= make_response(
-            jsonify(users_dict), 201
-        )
-        return response
+        data = request.get_json()
+        try:
+            new_user= User(
+                firstName = data.get('firstName'),
+                lastName= data.get('lastName'),
+                email= data.get('email'),
+                password=data.get('password'),
+                status=data.get('status')
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            users_dict=new_user.to_dict()
+            response= make_response(
+                jsonify(users_dict), 201
+            )
+            return response
+        
+        except IntegrityError as e:
+            db.session.rollback()
+            if "duplicate key value violates unique constraint" in str(e.orig):
+                return jsonify({"error": "Email already exists"}), 400
+            return jsonify({"error": str(e.orig)}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 
 @app.route('/user/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
