@@ -8,7 +8,8 @@ function LogIn(){
     const [error, setError]= useState(null);
     const navigate= useNavigate()
 
-    const handleLogin =async()=>{
+    const handleLogin =async(e)=>{
+        e.preventDefault();
         try{const response= await fetch('http://127.0.0.1:5000/login', {
             method: 'POST',
             headers: {
@@ -17,11 +18,11 @@ function LogIn(){
                 body: JSON.stringify({email, password}),
                     });
     const data= await response.json()
-        if(data.success){
+        if(data.token){
             localStorage.setItem('token', data.token)
             navigate('/home')
         }else{
-            setError(data.error)
+            setError(data.message || "LoginFailed")
            }
             }catch(error){
                 setError('An error occurred, please do try again')
@@ -29,7 +30,7 @@ function LogIn(){
     }
     return(
         <div>
-            <form>
+            <form onSubmit={handleLogin}>
             <label>email</label>    
             <input type="text" placeholder="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             <br />
@@ -37,7 +38,7 @@ function LogIn(){
             <input type="text" placeholder="password" value={password} onChange={(e) =>setPassword(e.target.value)} />
             </form>
             <br />
-            <button type="button" onChange={handleLogin}>Login</button>
+            <button type="button">Login</button>
         </div>
     )
 }
