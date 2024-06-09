@@ -127,11 +127,12 @@ def users():
     elif request.method == 'POST':
         data = request.get_json()
         try:
+            hashed_password = generate_password_hash(data.get('password'), method='pbkdf2:sha256', salt_length=16)
             new_user = User(
                 firstName=data.get('firstName'),
                 lastName=data.get('lastName'),
                 email=data.get('email'),
-                password=data.get('password'),
+                password=hashed_password,
                 status=data.get('status', 'active')  # default status to active if not provided
             )
             db.session.add(new_user)
