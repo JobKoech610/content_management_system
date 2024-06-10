@@ -13,8 +13,8 @@ function App() {
   return (
     <>
     <NavBar/>
-    {/* <SignUp/> */}
-    <LogIn/>
+    <SignUp/>
+    {/* <LogIn/> */}
     {/* <Cards/> */}
     {/* <Homepage/> */}
     </>

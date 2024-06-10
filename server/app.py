@@ -128,8 +128,8 @@ def users():
                 firstName = data.get('firstName'),
                 lastName= data.get('lastName'),
                 email= data.get('email'),
-                password=data.get('password'),
-                status=data.get('status')
+                password=data.hashed_password,
+                status=data.get('status', 'active')
             )
             db.session.add(new_user)
             db.session.commit()
@@ -668,7 +668,7 @@ def login():
         token = create_access_token(identity = user.id, additional_claims=metadata, expires_delta=expiration)
        #token = generate_token(user, expiration)
         return make_response(jsonify({
-            "token": token, "user_id":user.id
+            "token": token, "user_id":user.id, "metadata": metadata
         })), 201
     
     return make_response({
