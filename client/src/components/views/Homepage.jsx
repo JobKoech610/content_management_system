@@ -2,7 +2,7 @@
 function Homepage(){
     return(
         <div>
-            <h1>Welcome to my Homepage!</h1>
+            <h1>Welcome to Carbon Tracker 2.0</h1>
         </div>
     )
 }
